@@ -1,0 +1,107 @@
+IAM (Users, Groups, Roles, & Policies)
+    * IAM in AWS stands for Identity and Access Management
+    * This is a Gobal service
+    * AWS IAM is a core web service that lets you securely control access to AWS services and resources. You can use it to manage who is authenticated (signed in) and authorized (has permissions) to use your cloud environment.
+    * Key Components of AWS IAM
+        -> IAM Users: Individual people or applications with long-term credentials.
+        -> IAM Groups: Collections of users used to manage and assign permissions together.
+        -> IAM Roles: Sets of temporary permissions that you can assume for specific tasks or trusted services.
+        -> IAM Policies: JSON documents that explicitly define which actions are allowed or denied on specific resources
+
+
+Policies:
+
+    * Policy refers to the power a user can have in the AWS account
+    * As mentioned earlier this is a JSON code which helps to access 
+    what are the user can access to which the user are group to which this policy is added
+    * There are two types of the Policies
+        -> AWS Managed Policies and the other one is Custom Policies
+        -> AWS Managed Policies are the ones which are created and kept in build by the AWS and there are n number of Policies which are there with different types of permissions
+        -> Customer Managed Policies are the ones which we create based on our requirement
+
+Types of Policies:
+    * AWS Managed Policies
+    * Customer Managed Policies
+        -> We can create the policies by following the below steps
+            - Open the AWS Console
+            - Search for IAM and in the side tab you will have the Policies tab and click that
+            - click create Policy
+            - Select the service (We should select the service for which we should create a policy)
+            - Next select the action allowed 
+                # here we need to select the effect (Allow or Deny)
+                # we should select the level of the policy which has the following actions
+                    > We can simply select all $service actions (Eg. EC2,S3)
+                    > List
+                    > Read
+                    > Write
+                    > Permission Management
+                    > Tagging
+            - Next we can select the permission based on the resource as well
+                # We can select ALL 
+                # We can select the specifically (Eg.Instance )
+        -> We can create multiple groups and have multiple groups and a user can fall in multiple groups as well            
+        -> We can give request condition - (optional)
+            - User is MFA authenticated (Filter access if the MFA was used to validate the temporary security credentials that made the request)
+            - Requested from IP (Allow this access when the request is coming from specific IP)
+        -> Give next and you will go to the Review and update page
+        -> Give create policy
+    * Inline Policy
+        -> while creating the user (or while editing the user in the permission tab we have add permission or create inline permission)
+        -> This permission is only for the user created
+        -> If I delete the user then the policy is also created but the other policy such as AWS Managed or Customer Managed policies would have the reference of the policies and it will not delete the original Policy
+
+Users:
+
+    * Users are the ones which are created by the admin who holds the root account or Organisation account
+    * Users are access the AWS Console and the CLI with the permissions he has
+    * We can create the user by the following steps
+        -> Open the AWS Console
+        -> Search for IAM and in the side tab you will have the users tab and click that 
+        -> click create user
+        -> Give the username in the User name field
+        -> tick the checkbox where it ask Provide user access to the AWS Management console based on the requirement if you want the user to work in the GUI as well
+        -> Once you tick the checkbox it will ask to specify the user type
+            - specify a user in the Identity Center - Recommended
+            - I want to create an IAM user
+        -> As of now we can select the second option
+        -> Now it will ask for the console password
+            - Autogenerate password (If you want a random password)
+            - Custom password (If you want to specifically keep a password)
+            - If you want the user to create a new password once he logged in with the custom password you have created we have to tick the checkbox where it ask user must create a new password at the next sign-in - Recommended option
+        -> Now give next
+        -> Now we need to assign the permissions for the user 
+        -> We can assign the policies for a user using three ways
+            - Add the user to group (The policy will be assigned to the groups so when we add the user to this group the user also inherits the policies)
+            - Copy permissions (We can copy the permissions of the existin user who has the required policies)
+            - Attch policies directly (We can directly attach the AWS Managed or custom policies inline, Eg. AmazonS3FullAccess)
+        -> Now give next
+        -> Here you can Review the user details,permission summary and we can also add the tag for the user here and give create
+        -> Now the user will be created and you will be in the retrieve password page where you can see the console sign-in details such as console sign-in url,username and password
+        -> Now we can sign-in as the IAM user using the account number or alias, username and password
+        -> We can create the alias (should be Unique Gobally) for the account (Main account) using the create alias option in the IAM Dashboard
+    * Permission Boundary
+        -> Set a permission Boundary to control the maximum permission for the user. Use this advanced feature to delegate permission management to others
+        -> This can be set by the following ways
+                - Go to the user for which we need to set
+                - In Permissions tab of the user there will be Permission boundary option
+                - Give set permission boundary
+                - Now for example if a user named user 1 has set Read only access for the S3 in the permission boundary
+                - Now if I add Admin access to the user 1 then also we can access only the s3 bucket read access only as we have set the permission boundary 
+
+Groups:
+    
+    * Group is a Collections of IAM user with the specific permissions attached to this based on the requirement
+    * For example we can create a S3 read only group so that the users addded to this group only has permission to access read permission of the S3
+    * We can create a group by the following steps
+        -> Open the AWS Console
+        -> Search for IAM and in the side tab you will have the users tab and click that 
+        -> click create group (Dev Team)
+        -> Give a groupname in the user Group field
+        -> Add users to the group - this is optional and we can add the user later as well
+        -> attach permission policies - this is optional and we can add the user later as well 
+            - We can attach the permission for which the user in the group should have eg. EC2 full access
+            - Now we have two type of policies
+                # The policy attached to the user inline while creation and the policies attached to the group from which user inherits the permission
+                # Now we can compare a scenario, we have two users - user1 and user2, the user1 has been added to a group which has EC2fullaccess policy and the user2 has been added to the same group and additionally it has the inline policy of AmazonS3FullAccess policy
+
+        
