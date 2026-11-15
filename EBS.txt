@@ -1,0 +1,21 @@
+EBS (Elastic Block Store):
+============================
+    Amazon EBS (Elastic Block Store) is a high-performance, persistent block storage service designed for use with Amazon EC2 instances. It functions like a virtual hard drive in the cloud.
+
+Types of:
+    * SSD Drives
+        - Amazon EBS General Purpose SSD Volumes
+            # gp3
+            # gp2
+        - Amazon EBS Provisioned IOPS (Input/Output per second) SSD Volumes
+            # io2 Block Express
+            # io1
+    * HDD Drives
+        - Throughput Optimised HDD Volumes
+            # st1
+        - Cold HDD Volumes
+            # sc1
+    * Previous Generation Volumes
+        - Magnetic tapes
+        - Used for infrequently accessed data storage
+        - Cheap compared to the other Drives
