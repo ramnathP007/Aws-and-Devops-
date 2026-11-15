@@ -1,4 +1,5 @@
-IAM (Users, Groups, Roles, & Policies)
+IAM (Users, Groups, Roles, & Policies):
+======================================
     * IAM in AWS stands for Identity and Access Management
     * This is a Gobal service
     * AWS IAM is a core web service that lets you securely control access to AWS services and resources. You can use it to manage who is authenticated (signed in) and authorized (has permissions) to use your cloud environment.
@@ -8,8 +9,8 @@ IAM (Users, Groups, Roles, & Policies)
         -> IAM Roles: Sets of temporary permissions that you can assume for specific tasks or trusted services.
         -> IAM Policies: JSON documents that explicitly define which actions are allowed or denied on specific resources
 
-
 Policies:
+=========
 
     * Policy refers to the power a user can have in the AWS account
     * As mentioned earlier this is a JSON code which helps to access 
@@ -20,6 +21,8 @@ Policies:
         -> Customer Managed Policies are the ones which we create based on our requirement
 
 Types of Policies:
+==================
+    Identity based Policies: 
     * AWS Managed Policies
     * Customer Managed Policies
         -> We can create the policies by following the below steps
@@ -49,8 +52,35 @@ Types of Policies:
         -> while creating the user (or while editing the user in the permission tab we have add permission or create inline permission)
         -> This permission is only for the user created
         -> If I delete the user then the policy is also created but the other policy such as AWS Managed or Customer Managed policies would have the reference of the policies and it will not delete the original Policy
+    
+    Resource based policies:
+    * Policy tagged or created for the resource of the AWS like S3 (Bucket policy)
+    * This is used when a resource level access to be given for a user like specific folder of a S3 bucket to one user and the other to some other user
+    * Now we can give a AmazonS3FullAccess to user1 but we can give the access to the specific folder A alone
+    * Now we can give a AmazonS3FullAccess to user2 but we can give the access to the specific folder B alone
+    * So the user1 can only have full access for the folder A only and same for the folder B 
+    * So instead of giving all permission at user level we can give read access in the Identity based policy (USer level) and the write access in the resource based policy (Bucket policy)
+    * Eg: Bucket Policy
+    {
+    "Version": "2012-10-17",
+    "Statement": 
+        [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::123456789012:user/user1"
+            },
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+            ],
+            "Resource": "arn:aws:s3:::bucketname/folder-name/*"
+        }
+        ]
+    }
 
 Users:
+======
 
     * Users are the ones which are created by the admin who holds the root account or Organisation account
     * Users are access the AWS Console and the CLI with the permissions he has
@@ -89,12 +119,13 @@ Users:
                 - Now if I add Admin access to the user 1 then also we can access only the s3 bucket read access only as we have set the permission boundary 
 
 Groups:
+======
     
     * Group is a Collections of IAM user with the specific permissions attached to this based on the requirement
     * For example we can create a S3 read only group so that the users addded to this group only has permission to access read permission of the S3
     * We can create a group by the following steps
         -> Open the AWS Console
-        -> Search for IAM and in the side tab you will have the users tab and click that 
+        -> Search for IAM and in the side tab you will have the group tab and click that 
         -> click create group (Dev Team)
         -> Give a groupname in the user Group field
         -> Add users to the group - this is optional and we can add the user later as well
@@ -104,4 +135,68 @@ Groups:
                 # The policy attached to the user inline while creation and the policies attached to the group from which user inherits the permission
                 # Now we can compare a scenario, we have two users - user1 and user2, the user1 has been added to a group which has EC2fullaccess policy and the user2 has been added to the same group and additionally it has the inline policy of AmazonS3FullAccess policy
 
+
+Access Key and Secret Key:
+==========================
+
+    * Used to access the AWS using the command line
+    * To create the key follow the below steps
+        -> Open the AWS Console
+        -> Search for IAM and in the side tab you will have the users tab and click that 
+        -> Select the user and in the options go to security credentials --> Access keys
+        -> Click create access key
+        -> In the use case select the use case you are going to do  
+            - CLI, Local code,applications running on an AWS Compute service, Third party service,applications running outside AWS,others
+        -> Tick the checkbox for the confirmation and click next
+        -> Now we can give the description optional and give next
+        -> Now you will give two keys
+            - Access Key -- like user name
+            - Secret access Key -- Like password
+        -> Give done 
+    * Now we can access the aws using by configuring the aws by using the following steps
+        -> Launch the aws EC2 Instance and check whether we have aws command installed if not install the command 
+        -> Now use aws configure command
+            - It will ask for Access key 
+            - It will ask for Secret key
+            - Set the default region name as user default region [ap-south-1]
+            - Set the default Output name as Json
+        -> now we can access the aws service using the aws cmds
+
+Roles:
+======
+    * This can be used when one AWS service whats to communicate with the other AWS service
+    * This can prevent the creation of the hidden folder .aws in the instance which has the hard coded credentials in the instance
+    * A Role can be created by the following steps
+        -> Go to the AWS console
+        -> Search for IAM and in the options there will be Roles
+        -> Click that 
+        -> Click the create Role
+        -> Give a name for the Role
+        -> Select the trusted entity type
+            - AWS service
+            - AWS account
+            - Web Identity
+            - SAML 2.0 Federation 
+            - Custom Trsut policy
+        -> Now select the use case ie From which service you are going to access the other service
+        -> give next
+        -> Now we should add the permission policy of the destination service
+        -> create a tag and this is optional
+        -> Click create policy
+        -> And now we should attach the IAM role to the instance using the following steps
+            - Select the instance / select action / security/ click Modify IAM role / In the IAM role select the role you have created
+            - Give update IAM role
+        -> If the Role is not required we can detach the role by the following 
+            - Do the same as attch but select No IAM role
+
+Cross Account Access:
+=====================
+    * Here the concept is when we want one resource in one AWS account to access the resource of the other AWS account
+    * In the First account from which you are going to have the EC# instance for eg follow the below steps
+        -> First we need to create a IAM role
+            - Here while giving the permissions we should mention the other account resource ARN (Eg: S3 Bucket arn)
+            - Either we can edit the existing Full access and add the arn in the resource area or we can attach a customer managed Policy of the bucket arn
+    *Now attach this role to the current account EC2 instance
+    * In the other account where you have the S3 bucket in the bucket policy change the principal to the arn of the IAM role of the first account
+    
         
