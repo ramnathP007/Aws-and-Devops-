@@ -1,21 +1,102 @@
 EBS (Elastic Block Store):
-============================
-    Amazon EBS (Elastic Block Store) is a high-performance, persistent block storage service designed for use with Amazon EC2 instances. It functions like a virtual hard drive in the cloud.
+==========================
+    * Amazon EBS (Elastic Block Store) is a high-performance, persistent block storage service designed for use with Amazon EC2 instances. It functions like a virtual hard drive in the cloud.
+    * For creating the EBS volume it should be in the same Availablity zone of the instance for which we are going to attach
 
-Types of:
+Types of Volumes:
+=================
     * SSD Drives
-        - Amazon EBS General Purpose SSD Volumes
-            # gp3
-            # gp2
-        - Amazon EBS Provisioned IOPS (Input/Output per second) SSD Volumes
-            # io2 Block Express
-            # io1
+        -> Amazon EBS General Purpose SSD Volumes
+            - gp3
+            - gp2
+        -> Amazon EBS Provisioned IOPS (Input/Output per second) SSD Volumes
+            - io2 Block Express
+            - io1
     * HDD Drives
-        - Throughput Optimised HDD Volumes
-            # st1
-        - Cold HDD Volumes
-            # sc1
+        -> Throughput Optimised HDD Volumes
+            - st1
+        -> Cold HDD Volumes
+            - sc1
     * Previous Generation Volumes
-        - Magnetic tapes
-        - Used for infrequently accessed data storage
-        - Cheap compared to the other Drives
+        -> Magnetic tapes
+        -> Used for infrequently accessed data storage
+        -> Cheap compared to the other Drives
+
+Volume creation:
+================
+    * A new volume can be created by the following steps (This is a paid one)
+        -> Go to the volume tab in the EC2 sidebar
+        -> Click create Volume
+        -> Select the Volume type based on our requirement mostly General Purpose SSD
+        -> Select the required size of the disk say for example 5 GiB
+        -> If we want we also select the IOPS, Throughput
+        -> Select the Availablity zone of the instance for which you are going to create/attach for the instance
+        -> Snapshot is optional
+        -> Click create volume
+        -> Now we will get the volume in available state and now we need to assign the volume to the instance we want 
+        -> Select the volume and click actions/attach the volume
+            - The Volume ID and the Availablity zones will be shown already
+            - Select the instance for which we want to add the volume
+            - Device name can be set 
+            - Click attach volume
+
+Reflection of Volumes:
+======================
+    * To get the attached storage reflected in the machine follow the steps shown for respective OS 
+        -> Windows based EC2:
+            - Use the pem key of the key and get the password and login the server using the RDP
+            - If you see the File manager the old drive only be available after attaching the volume also 
+            - So now in the search, search for disk management  --> create and format hard disk partition
+            - You will see the attached volume in unallocated state
+            - Now select the disk and give online and then give initialise disk and now select the disk and give ok
+            - Now again right click the new volume and select make new simple volume
+            - Give next, now you can select how much space from the total disk we can allocate and specify that space and defaultly it will be full space and give next
+            - Now select a letter for the drive and give next
+            - Select the file system format as NTFS and give next and finally give finish and now the volume is now fully ready
+    
+    * We can increase or decrease the volume by following the below steps
+        -> Selecting the volume and in actions go to modify volume and in the size change the volume size we want
+        -> Now again go to disk management 
+        -> Now we have two options 
+            - We can create the new unallocated volume as new simple drive
+            - Extend the same drive created before and increase the size
+
+Backup:
+=======
+    * For the creation of the backup we need to take the backup Snapshot
+    * The Snapshot can be created by following the below steps
+    * Go to the Volumes --> Select the volume you want to take Snapshot --> Click create Snapshot
+    * Give a description for the backup which is to be taken 
+    * Snapshot can be in the same AZ 
+    * We can set the tag as optional
+    * Click create a Snapshot
+    * Now if we go to Snapshot tab we can see the create Snapshot, note that once the Snapshot is taken the data created/modified will not reflect in the created Snapshot
+    * Now if we terminate the instance and delete the volume for which we have created the Snapshot also we can have the data Through the Snapshot
+    * This can be attached to a new machine by the following steps
+        - Create the EC2 instance as we normally do
+        - In the storage section select advanced and in the Snapshot section select the Snapshot which has been created add this as additional volume apart from the root
+        - The volume created should be greater than the Snapshot volume size
+    * AWS will not allow us to shrink the Volume but we can extend the volume
+    * For shrinking we can take the backup of the existing volume and create a new volume of required size and attach both the volume to the instance and then copy the Snapshot volume (Old drive) to the new volume created with required size and we can delete the old one
+    * For the Linux machine to add the volume follow the below steps
+        - lsblk
+        - file -d /dev/diskname
+        - mkfs -t ext4 /dev/diskname
+        - mkdir /newfolder (Where you want the folder)
+        - mount /dev/diskname /newfolder
+        - df -kh (We can see the mounted volume)
+        - resize2fs /dev/diskname (Used to resize the disk if you have extended the volume size)
+        - To add the disk Permanently we should add the diskname in the /etc/fstab
+
+Image:
+======
+    * Image is taking the Snapshot/Backup of the entire virtual machine including the Volumes
+    * This can be done by following the below mentioned steps
+        - Select the instance and click action and in the image and template select create image
+        - Give a name for the image 
+        - Give a description
+        - Tick the reboot instance
+        - Select the deletion of the volume on termination based on the requirement or even add or delete the volume based on the requirement
+        - Tags are optional
+        - Click create image
+        - This AMI can be added when we are creating the instance and we can add the volume as well while we created the image as Snapshot
