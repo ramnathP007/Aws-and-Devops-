@@ -1,1 +1,16 @@
-Elastic IP
+Elastic IP (This is a paid one):
+===========
+    * We can use this for assigning a Permanent Public IP for a EC2 Instance, so that even after the reboot we can have a Permanent public IP
+    * we can assign a public IP using the following steps
+        -> Go to the Elastic IP in the EC2 Service sidebar
+        -> Click Allocate Elastic IP
+        -> Select the Public IPv4 address pool as Amazon's pool of IPv4 addresses
+        -> Select the region in the network border group
+        -> Accelerator and Tag is optional
+        -> Give Allocate
+        -> Now we have got a public IP Allocated
+        -> So now we should assign the Allocated IP to the Instance for that do the following steps
+            # In the actions of the Elastic IP tab, Select Associate Elastic IP address
+            # Select Resource type as Instance/ network Interface and in our case this is a Instance
+            # Choose the instance for which we are going to attach the IP
+            # Give Associate and now the IP will be Associated for the Select instance
