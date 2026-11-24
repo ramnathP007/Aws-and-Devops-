@@ -1,1 +1,273 @@
 
+Prerequisities:
+===============
+
+IP:
+===
+    * Internet Protocol
+    * It is a address to reach the server
+    * Syntax --> #.#.#.# and each octet should be range from 0 - 255
+    * 400.4.44.5 is not a valid IP address
+
+CIDR (Classless Inter-Domain Routing) - Range of IP's:
+=======================================================
+    * Used to denote a range of IP's 
+    * Eg: 10.0.0.0/24 ie (10.0.0.0 - 10.0.0.255) total IP is 256
+    * 10.0.0.0/n ==> 10.0.0.0/32
+        -  Total IP: 2^(32 - n)
+           Total IP: 2^(32 - 32) = 2^0 = 1 Total IP
+        - So the starting IP and ending IP will be 
+            10.0.0.0
+    * 10.0.0.0/31 ==> 2^(32-31) = 2^(1) = 2 Total IP
+            10.0.0.0 to 10.0.0.1
+    * 10.0.0.0/30 ==> 2^(32-30) = 2^(2) = 4 Total IP
+            10.0.0.0 to 10.0.0.3
+
+Public Ip:
+==========
+    * It is reachable in the WAN (Internet)
+    * Assigned by the AWS
+
+Private IP:
+===========
+    * It is reachable in the LAN (Local network)
+    * We will choose based on the VPC Architecture
+
+VPC (Virtual Private Cloud):
+============================
+    * This is a Private range of the IP's 
+    * This is a large area of the land say 10.0.0.0/24 that can accommendate 256 peoples
+    * We can divide the VPC into subnet like plot each has some peoples
+    * So we can divide the land into 5 plots say each has of 64 peoples in 3 plot and 32 peoples in 2 plots
+    * So the range of people and in our case the range of IP's will be 
+        -> 10.0.0.0    - 10.0.0.63   ->Subnet 1 (10.0.0.0/26) --> 32-26 = 6 = 2^6 = 64
+        -> 10.0.0.64   - 10.0.0.127  ->Subnet 2 (10.0.0.64/26)
+        -> 10.0.0.128  - 10.0.0.191  ->Subnet 3 (10.0.0.128/26)
+        -> 10.0.0.192  - 10.0.0.223  ->Subnet 4 (10.0.0.192/27) --> 32-27 = 5 = 2^5 = 32
+        -> 10.0.0.224  - 10.0.0.255  ->Subnet 5 (10.0.0.224/27)
+    * There is a default VPC given by the AWS
+    * The max and min of the aws VPC is max /16 ie 65536 IP's and min /28 ie 16 IP's
+    * To create a VPC follow the following steps
+        -> Go to AWS console
+        -> In the VPC service go to the your VPC and give create VPC
+        -> In the resources to create option select the vpc only option for creating only the vpc and vpc and more option for creating the entire vpc,Subnets, Route table and routes
+        -> In the Name give a name for the VPC (Eg. My VPC)
+        -> In the IPv4 CIDR block select the IPv4 CIDR manual input
+        -> Now in the IPv4 CIDR select the CIDR value with the range ie 10.0.0.0/16 
+        -> If you want select the IPv6 CIDR block or give No IPv6
+        -> Tenancy we can select default Tenancy for a shared Tenancy and dedicate for a dedicated Tenancy
+    * Now to create a subnet follow the following steps
+        -> We can add a tag if we want
+        -> We can create a subnet for the Public and Private accesses
+        -> For the public subnet we can give 10.0.1.0/24 
+        -> Now go to the subnet tab and give create subnet
+        -> In the VPC ID select the vpc which we have created or under which vpc you want the subnet to be created
+        -> The Associated VPC CIDR's will be listed there ie 10.0.0.0/16
+        -> In the subnet settings follow the below configurations
+            - Give a subnet name for the subnet we are creating (Eg. Public Subnet)
+            - Choose the AZ for the subnet
+            - In the IPv4 CIDR block select the subnet range for the subnet we are going to create (Eg.10.0.1.0/24)
+            - We can add a tag if we want
+            - click create subnet
+        -> Using the above step we can create another subnet named (Eg.Private Subnet) with the IPv4 range as (Eg.10.0.2.0/24)
+        -> Defaultly all the subnets created are private subnet unless we give Internet access for that subnet
+        -> We can create and give the IG to the public IP by following steps
+            - In the VPC dashboard go to IG
+            - Click create IG
+            - Give the Name for the IG and tag is optional
+            - Give create IG
+        -> Now we need to attach the IG to the VPC by following the below steps
+            - Select the IG and in actions we need to select attach to VPC
+            - In the available VPC's select the vpc in which the public subnet is to be made
+            - click the attach IG
+        -> Now the IG is now attached to VPC and we can now give access to the subnet to make it public
+        -> To attach the IG to the subnet we need a Public route table and Private route table by the following steps
+            - In the vpc dashboard select routetable 
+            - click create route
+            - Give name for the route table (My-Pub-RT)
+            - Select the My VPC 
+            - tag is optional
+            - select create route table
+        -> To attach the NAT to the subnet we need a Private route table and Private route table by the following steps
+            - In the vpc dashboard select routetable 
+            - click create route
+            - Give name for the route table (My-Pvt-RT)
+            - Select the My VPC 
+            - tag is optional
+            - select create route table
+        -> Now we can connect the routetable for the public subnet by following the below steps
+            - Go to the subnets dashboard
+            - Select the public subnet and go to the route table option and select the edit route table association
+            - In the Route table ID select the routetable we have created for the public subnet (My-Pub-RT) and click create route table
+            - Now we can see the Public subnet in the subnet association tab in the My-Pub-RT routetable
+        -> So now for the private routetable we can create a route for the NAT gateway by the following steps
+            - Go to the subnets dashboard
+            - Select the private subnet and go to the route table option and select the edit route table association
+            - In the Route table ID select the routetable we have created for the public subnet (My-Pvt-RT) and click create route table
+            - Now we can see the Private subnet in the subnet association tab in the My-Pvt-RT routetable
+        -> Now we need to connect the IGW to My-Pub-RT by adding the route to the My-Pub-RT routetable by the following steps
+            - In the routes tab of the My-Pub-RT routetable click the edit routes 
+            - Add the Destination as 0.0.0.0/0 and the target is IGW (select the IGW we have created)
+            - Click save changes
+        -> Now we need to connect the NAT to My-Pvt-RT by adding the route to the My-Pvt-RT routetable by the following steps
+            - In the routes tab of the My-Pvt-RT routetable click the edit routes 
+            - Add the Destination as 0.0.0.0/0 and the target is NAT (select the NAT we have created)
+            - Click save changes
+        -> Now we can create the security group for assigning it to the Instance we are creating by following the below steps
+            - Go to the security group dashboard
+            - click create security group
+            - In the security group give the name as PublicEC2SG
+            - You can give the Description we want 
+            - Select the VPC under which we want this SG (ie My VPC)
+            - Now we can create the rule for the inbound and outbound based on our requirement
+            - Defaultly all the inbound rules are deny
+            - We can allow the rules which we want explicitly
+            - In the inbound rule add the rule
+                # type - RDP / SSH based on the machine
+                # Protocol - TCP
+                # Port Range - 3389 / 22
+                # Source Anywhere 0.0.0.0/0
+                # we can add Description if we want (For accessing the machine from externally)
+        -> For the testing of the public access we can create two instance in both Public and Private VPC respectively
+        -> Like PublicEC2SG we can also create PrivateEC2SG for private subnet instances as well
+        -> To connect the Private EC2 machine without the Internet access and public IP using the following ways
+            - Login to the machine which has public access which is in the same VPC of the private machine and from there we can take SSH or RDP (In this case the Public instance is called as Basiton host or jump server)
+            - Using the NAT (Network Address Translator) gateway we can give internet access to the My-Pvt-RT and this can be done using the following steps
+                # Go to the NAT gateway tab
+                # Click create NAT gateway
+                # Give a name for the NAT (Eg. My-NAT)
+                # Select the public subnet so that the NAT will get the Internet access
+                # Connectivity type select as Public
+                # Allocate a Elastic IP for the NAT gateway instead of the private machine
+                # Tag is optional
+                # click create NAT gateway
+            - The advantage of assigning the public to the NAT gateway instead of the private IP is with one Public we can connect internet to the n number of private EC2 machine and this is a one way connect only only the internet can communicate with the private machine but the private machine cannot communicate with the internet
+
+Difference between SG and NACL (Network Access Control List):
+=============================================================
+    -> Security Group
+        - SG works on the Resource level (ie. instance,LB, RDS, etc..)
+        - We can take the example for this as a House main door
+        - Here we will have two rules one is inbound and the other is outbound
+            # The inbound traffic will be coming in using the inbound rule and goes out using the Statefull nature of the SG
+            # But once we login inside a EC2 machine and try to communicate to the other then we need to explicitly give the outbound rule
+        - SG is Statefull and the request which comes inside has the access for going out without the outbound access exist or not
+        - We can only allow a rule in the SG and we cannot deny
+    -> NACL
+        - NACL works on the Subnet level (ie. Public subnet, Private subnet)
+        - We can take the example for this as a House main gate where watchman will be there
+        - In NACL we can both allow and deny a rule (Eg we can deny a IP)
+        - We can create a NACL using the following steps
+            # Go to the NACL dashboard and click create NACL
+            # Give a name for the NACL
+            # Select the VPC for which we need the NACL
+            # Tag is optional
+            # Click create NACL
+            # Now we have the NACL
+            # Now in the subnet association tab give edit subnet association and select the subnet for which we need this NACL to be Associated and give save changes
+            # Here also we will have inbound and outbound rule separately
+                > Give edit inbound rule
+                > here we will have a rule number (Lower the rule number and higher the priority)
+                > For eg we can add two ssh rule with 1 and 2 as the rule number with allow and deny respectively
+                > This blockes the call in the subnet level
+                > Initally we can give a large Difference in the allow and deny value for example 100 for allow and 200 for deny so that the next allow rule can be 101
+            # NACL is stateless, so here we should allow or deny the outbound NACL rule for the inbound NACL rule
+
+
+VPC Endpoint:
+=============
+    -> For example we can take a EC2 machine which needs to access the contents in the S3 bucket, here usually we will use the IAM role which will be attached to the instance with the S3 permission
+    -> But in the above case we need internet access for the EC2 to access the other service (S3), here both the services are inside the same AWS cloud so we need to communicate without internet for that we use VPC Endpoint
+    -> We may get the data transfer charges when we use the Internet that may also be charged
+    -> We have two VPC Endpoints
+        - Gateway Endpoint
+        - Interface Endpoint
+    -> Now create a vpc, public subnet, IGW, Pub-RT, and create a EC2 instance in this vpc
+    -> Create a S3 bucket to access from the EC2 instance 
+    -> Create a IAM role for the EC2 machine to access the S3 bucket and attach the role to the EC2 instance
+    -> This scenario will work on internet so that the EC2 will push and pull the content using internet
+    -> If an instance is created in the private subnet then we need not have a internet so in that place we can also use Endpoint
+    -> To access without internet we must the use the VPC Endpoint by following the below steps
+        - Go to the VPC dashboard
+        - select Endpoints and click create Endpoint
+        - Give a name for the Endpoint as EC2-S3
+        - In the type we can select many option and in the above case we can select AWS services and select the S3 service with Gateway Endpoints
+            # Gateway Endpoint
+                > Supported by S3 and DynamoDB
+                > This will not have the ENI card
+                > As the both the services are in same VPC they will communicate using the internal network. 
+                > We can say we can use this Gateway Endpoint when both the services are in the same Region
+                > No Cross region access allowed and no cost 
+                > Workes in the VPC level
+
+            # Interface Endpoint 
+                > May other services in the aws will support Interface Endpoint
+                > We will be having a Elastic Network Interface (ENI) card in the Interface Endpoint 
+                > This will allocate a private IP and then communicate with the other services
+                > We can say we can use this Interface Endpoint when both the services are in the different Region
+                > Cross region access allowed and cost applicable
+                > Workes in the Subnet level
+        - We can select the vpc 
+        - Select the routetable in which the EC2 instance is there (And also we have the routetable for the entire VPC also)
+        - Select the full access policy or custom IAM policy
+        - Tag is optional
+        - click create an Endpoint
+        - Now After creating a Endpoint we may see an route added automatically in the routetable for the Endpoint ID
+        - So hereafter even without the IGW we can access the S3 bucket from the EC2 machine
+
+Managed Prefix List (Like Address group):
+====================
+    -> Say for example if a devops team has a 10 members and we need to allow a specific IP access for  in the SG then we need to add the 10 members IP address in 10 different inbound rules
+    -> And this may be applicable for test team, dev team etc... we can create a Managed Prefix List for that members
+    -> We can create the Prefix list using the following steps
+        - Go to the vpc dashboard
+        - select the Managed Prefix list tab and select create Prefix list
+        - Give a name to the Prefix list
+        - Give a max entires (Maximum entires we can add under this Prefix list) (Can be increased or decreased)
+        - In Address family (Cannot be changed after creating) we can select IPv4 or IPv6
+        - In the Prefix list entires add the members IP's one by one
+        - Tag is optional
+        - Click create Prefix list
+        - Now we can add the Prefix list instead of adding the Source or Destination one by one
+
+
+VPC Peering (One to One):
+============
+    -> We can use the VPC Peering to connect one VPC with the other VPC which are in the same/ different region or in different Aws account without Internet
+    -> This VPC Peering is free of cost and also it is one to one ie we can set the peering from one vpc to one vpc only and cannot connect one vpc to many vpc in single peering 
+    -> One Prerequisities is the CIDR block should not be the same for both the vpc's as that may need to overlap the other Ip
+    -> We can create the VPC peering by following the below steps
+        - Go to the VPC dashboard
+        - Create a vpc in two different region or two vpc in the same region (My-VPC-A-> 10.0.0.0/24 and My-VPC-B -> 11.0.0.0/24)
+        - Create an EC2 instance in both the VPC's 
+        - Now if we try to connect the private Ip of the one machine to the other we can't connect as they are in different VPC, so now we need to setup the VPC peering 
+        - So in VPC/Peering connection click on the create a peering connection
+        - Give a name to the peering connection as london-tokyo-peering
+        - In Select the local VPC to peer with select the source machine VPC
+        - In Select another VPC to peer with select the account (Same or different) and the region(Same or different)
+        - Enter the Destination VPC ID
+        - Tag is optional
+        - Click create a peering connection
+        - Once you click the create a peering connection in the source Region or account in the Destination peering connection tab we will receive a request and select the request and in action give accept request and again give accept request
+        - Now go to the source VPC go to the VPC's main route table and give edit routes 
+            # In Destination give the CIDR of the Destination vpc and in the target give peering connection and select the peering connection which we have created
+            # Give save changes
+            # Now do the same for the VPC Associated to the EC2 as well
+        - Now go to the Destination VPC go to the VPC's main route table and give edit routes
+            # In Destination give the CIDR of the Source vpc and in the target give peering connection and select the peering connection which we have created
+            # Give save changes
+            # Now do the same for the VPC Associated to the EC2 as well
+
+Transit Gateway (One to Many):
+==============================
+    -> When the number of VPC increasing the one to one peering is getting complicated
+    -> In that case we will use the Transit Gateway.
+    -> After creating the Transit gateway we will attach the VPC's to be communicated to the TGW and then we will tell the routes in which, which VPC should talk with which VPC
+    -> We can create the Transit gateway using the below mentioned steps
+        - Go to the VPC dashboard
+        - In the Transit Gateway tab, click create Transit Gateway
+        - Give a Name to the TGW
+        - Description is optional
+        - Give create Transit gateway
+        - In the Transit Gateway attachments we can attach the vpc to which the TGW is to be attached
+        - In the TGW route tables, we can configure which VPC need to communicate with the which VPC
