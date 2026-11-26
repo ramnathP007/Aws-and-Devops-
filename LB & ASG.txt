@@ -1,0 +1,184 @@
+Load Balancer:
+==============
+    -> For example We have a t2.Large EC2 machine which can Handle 10K user request, but at the peak time we are receiving around 15K user request
+    -> So for this we may add more number of EC2 instances for this and we need to distribute the 15K load into these instances and for this we use Load Balancer
+    -> There are types of Load Balancer
+        - Classic (Outdated)
+            # Supports the HTTPS,HTTP and TCP Protocol (We can say it works on L7 and L3 layer)
+        - Application
+            # Supports the HTTP and HTTPS Protocol (We can say it works only on L7 layer)
+        - Network
+            # Supports the TCP and UDP Protocol (We can say it works only on L3 layer)
+        - Gateway
+            # Used for Third party Applications 
+            # Used for firewall, security compliance Application load Balancing
+        
+HTTP Vs HTTPS:
+==============
+    -> HTTP
+        - HTTP transmits the data in the plain text
+        - This will not use the SSL Certificate 
+
+    -> HTTPS
+        - HTTPS transmits the data as a encrypted text
+        - This will use the SSL Certificate
+
+
+TCP Vs UDP:
+===========
+    -> TCP
+        - Transmission Control Protocol has a 3 way handshake SYN-SYNACK-ACK and this will establish a connection for the file Transmission
+        - This is reliable
+        - Used for a file Transmission as we need to send without any lack of data 
+    -> UDP
+        - User Datagram Protocol has no 3 way handshake and this is used where the Transmission is not to be acknowledged
+        - This is non reliable
+        - Used in Streams and Video Games in browsers as this need not have to be 100% transmited and this may have a lack or data loss
+
+
+Classic LB:
+===========
+    -> We can create a CLB using the following steps
+        - For creating a LB we need some EC2 instances so first create few instances
+        - Give the name for the load Balancer name as sy Classic-LB
+        - Scheme we can select Internet-facing if the LB need to communicate with the Internet and internal if the LB is for internal services
+        - In the Network mapping we can select the VPC and the Availablity zones for the LB where the EC2 is created
+        - We can select the SG or create a SG for the LB
+        - Now we should select the listeners and routing 
+            # listener Protocol and listener Port is where the  Port listened by the LB
+                > HTTP:80
+            # Instance Protocol and Instance Port is where the Port Listened by the instances
+                > HTTP:80
+        - Now we should set the Health check
+            # Traffic is only routed to the Healthly instances
+            # We can configure the Health check
+                > Ping Protocol: HTTP
+                > Ping Port: 80
+                > Ping Path: /index.html
+        - In the instances tab select the instances where the same Application is running
+        - We can select the attributes
+            # We can enable the cross-zone load Balancing
+            # We can enable connection draining (The maximum time for the load Balancer to allow the existing connection to complete, when the max time is reached the LB will forcibly close the existing connection)
+                > Timeout (draining interval)
+        - Tag is optional
+        - Review the summary and click create load Balancer 
+    -> We can set the Algorithm based on our requirement (RR,Weighted RR, IP hash,LC,Secure Sticky etc..)
+    -> We can hit LB URL in the browsers to access the Applications
+
+ALB LB:
+===========
+    -> Path Based routing 
+        - If a LB url is going to two serve different Application we can use that specific path in the url so that the request will be routed to that EC2 instances
+            # http://abc.com/green this will go to the app group which has the green Application
+            # http://abc.com/red this will go to the app group which has the red Application
+    -> Host Based routing
+        - If we need to route to the specific host we can use the Host based routing
+            # http://green.abc.com
+            # http://red.abc.com
+    -> Sticky session is used to set a time limit to maintain the session for the (If there is inactivity for the mentioned time the session will be terminated)
+    -> We can create the ALB using the following steps
+        - We need to create a Target group or App group to assign more same Application server for the high Availablity
+        - We can create the Target group by the following steps
+            # While creating the EC2 instances we need the path name in the /var/www/html/green/index.html for the /green instances and /var/www/html/red/index.html for the /red instances
+            # Go to the Target group tab in the LB dashboard
+            # In the Basic configuration choose the Target type as instances
+            # Give a Target group name as GreenTG
+            # Choose the Protocol:Port which the LB is listening 
+                > HTTP:80
+            #Choose the IP Address type as per the requirement
+                > IPv4 (select)
+                > IPv6
+            # We can select the VPC in which the LB SG or the relevant VPC is created
+            # Protocol Version we can select based on the requirement
+                > HTTP1 (select)
+                > HTTP2
+                >gRPC
+            #In the Health checks we can select the path based on the requirement and here it is 
+                > Health check Protocol: HTTP
+                > Health check path: /green/index.html
+            # if we want we can give the advanced Health check settings
+            # Attributes will be defaultly applied and it can be edited in future
+            # We can add the tag if we want 
+            # Give next
+            # Now the instances will be listed which are present which supports this Target group so select the instances which should come under this Target group and give include as pending below
+            # Now give create Target group
+        - Create the Target group for the Red instances like the same as above
+        - Now go to the ALB load Balancer
+        - Click create Load Balancer
+        - Give name
+        - select the Scheme
+        - select the Load Balancer IP address type
+        - select the VPC and AZ
+        - select the SG
+        - Now in the Listens and routing
+            # Add the listener Protocol and port and add the default action (Target group for the default LB url)
+        - If we want we can optimise the LB with the Amazon CloudFront+AWS WAF, AWS Gobal Accelerator
+        - Now review the config and click create LB
+        - Now we will have the LB ready now in the ALB-Internet, in the listener and rules select the default  listener and in Manage rule Click edit rule
+        - click add rule
+            # Give a name for the rule
+            # Add the condition as path and give the path as /green* and give next
+            # In the define rule action give the actions as forward to Target group
+                > Forward to target group
+                    Target group select the required target group
+            # Give next
+            # Set the priority for the listener rule which we created as 1 
+            # Give next
+            # And give create
+        -Like this we can create the Rule for the RedTG as well
+        - now we can use the LB url/green adn LB url/red to test the URL
+            
+NLB LB:
+=======
+    -> The main diff between ALB and NLB is static IP and Elastic IP for the NLB
+
+Auto Scaling Groups:
+====================
+    -> To automatically increase or decrease the instances based on the Traffic
+    -> Increasing the number of instances based on the traffic is called Horizontal Scaling
+    -> Increasing the resources and type of the resource of the instances is called vertical Scaling
+    -> To create a ASG we can follow the below steps
+        - Go to the ASG tab
+        - Click create ASG
+        - Give a name to the ASG
+        - In the select Template, select the Template you want for the EC2 machine to be created or we can create the Template using the below steps
+            # In the Template page click create Template
+            # Give a name to the Template
+            # Give a template Version description 
+            # In the Launch template contents select the Quick start and select the AMI we want 
+            # select the instance type now or we can select later in ASG
+            # select the key pair
+            # select the SG 
+            # select the storage volumes
+            # Tag is optional
+            # we can give the package installation scripts if we want in the User meta data or Create a template which is taken from the existing EC2 machine which has that package
+            # Click Launch ASG
+        - Give next
+        - Now we can also override the template
+        - Now select the VPC and AZ and Subnets
+        - Give next
+        - Now if we want to attach to the existing LB or create a LB for the ASG we can do or without LB we can create the ASG as well
+        - Give next
+        - In the Group size
+            # select the desired size (stable count)
+            # select the max and min capacity
+        - We can also select the target tracking policy (Like if the cpu is this much )
+        - We can select the instance replacement event or instance maintainance policy which may be used in the patch updates 
+            # No policy
+            # Launch before Terminating 
+            # Terminate and Launch
+            # Custom Behaviour
+        - We can also select the additional capacity settings
+            # default (Template based resource reserveration)
+            # none (Instances will be launched into a capacity reserveration)
+            # capacity reserveration only (Instances will only be launched into a capacity reserveration.If the capacity reserveration isn't available, the instance will fail to Launch)
+            # capacity reserveration first (Instance will launch into a capacity reserveration first, if the capacity isn't available, instance will run in On-Demand capacity)
+        - In additional settings
+            # We can enable instance scale-in protection
+            # We can enable monitoring  (using Cloudwatch)
+            # We can also enable default instance warmup (Until the time the Cloudwatch starts monitoring the new instance)
+        - Give next
+        - We can configure the notification if we want using the SNS service
+        - Give next
+        - Tag is optional
+        - Review and give create ASG
